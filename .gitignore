@@ -9,8 +9,6 @@ logs/
 data/
 data_organized/
 
-*.pt
-*.npy
 memory/
 test/
 *.db
