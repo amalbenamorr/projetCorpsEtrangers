@@ -119,7 +119,6 @@ threadpoolctl==3.6.0
 tiktoken==0.12.0
 tokenizers==0.22.2
 torch==2.6.0
-torchaudio==2.5.1+cu121
 torchvision==0.21.0
 tqdm==4.67.3
 typer==0.24.1
