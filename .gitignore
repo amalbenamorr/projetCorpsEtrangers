@@ -8,7 +8,7 @@ results/
 logs/
 data/
 data_organized/
-models/
+
 *.pt
 *.npy
 memory/
