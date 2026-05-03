@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <title>ELMAZRAA — Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f2f6f3;
+      --bg2: #ffffff;
+      --bg3: #f8faf8;
+      --border: #e2e8e2;
+      --green: #16a34a;
+      --green2: #115e3b;
+      --red: #ef4444;
+      --orange: #f97316;
+      --blue: #3b82f6;
+      --text: #111827;
+      --muted: #6b7280;
+      --mono: 'Courier New', monospace;
+      --serif: 'Lora', 'Georgia', 'Times New Roman', serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    .header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: 1px;
+      font-family: var(--serif);
+      color: var(--green2);
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--green2);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(63, 185, 80, 0.1);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      color: var(--green);
+      font-family: var(--mono);
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    .clock {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      border-color: var(--blue);
+      background: rgba(88, 166, 255, 0.06);
+    }
+
+    .btn-green {
+      background: var(--green2);
+      border-color: var(--green2);
+      color: white;
+    }
+
+    .btn-green:hover {
+      background: #2ea043;
+      border-color: #2ea043;
+    }
+
+    .btn-header {
+      background: var(--bg2);
+      color: var(--green2);
+      border: 1px solid var(--green2);
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-header:hover {
+      background: rgba(17, 94, 59, 0.05);
+    }
+
+    /* LAYOUT */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* KPI CARDS */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .kpi {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      transition: border-color 0.2s;
+    }
+
+    .kpi:hover {
+      border-color: #b0b8b0;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      font-family: var(--mono);
+    }
+
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+      font-family: var(--mono);
+    }
+
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .kpi-bar {
+      height: 2px;
+      border-radius: 1px;
+      margin-top: 10px;
+      background: var(--border);
+    }
+
+    .kpi-bar-fill {
+      height: 100%;
+      border-radius: 1px;
+      transition: width 0.8s ease;
+    }
+
+    /* MAIN GRID */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 16px;
+    }
+
+    /* PANELS */
+    .panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--green2);
+      font-family: var(--serif);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-body {
+      padding: 16px 20px;
+    }
+
+    /* TABLE */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: left;
+      padding: 0 12px 10px 0;
+      font-family: var(--mono);
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px 12px 10px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      font-size: 13px;
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr {
+      transition: background 0.1s;
+      cursor: pointer;
+    }
+
+    tr:hover td {
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    /* BADGES */
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--mono);
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .badge-reject {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--red);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+    }
+
+    .badge-review {
+      background: rgba(210, 153, 34, 0.15);
+      color: var(--orange);
+      border: 1px solid rgba(210, 153, 34, 0.3);
+    }
+
+    .badge-accept {
+      background: rgba(63, 185, 80, 0.12);
+      color: var(--green);
+      border: 1px solid rgba(63, 185, 80, 0.25);
+    }
+
+    .score-high {
+      color: var(--red);
+      font-family: var(--mono);
+    }
+
+    .score-med {
+      color: var(--orange);
+      font-family: var(--mono);
+    }
+
+    .score-low {
+      color: var(--green);
+      font-family: var(--mono);
+    }
+
+    .ts {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* RIGHT COLUMN */
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* LAST ALERT */
+    .alert-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .alert-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 15px;
+      color: var(--green2);
+      font-family: var(--serif);
+      font-weight: 600;
+    }
+
+    .alert-body {
+      padding: 14px 16px;
+    }
+
+    .alert-verdict {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: var(--mono);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .alert-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      font-size: 12px;
+    }
+
+    .alert-row:last-child {
+      border-bottom: none;
+    }
+
+    .alert-key {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    .alert-val {
+      font-weight: 500;
+    }
+
+    /* GIF PREVIEW */
+    .gif-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .gif-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 15px;
+      color: var(--green2);
+      font-family: var(--serif);
+      font-weight: 600;
+    }
+
+    .gif-img-wrap {
+      padding: 12px;
+    }
+
+    .gif-img-wrap img {
+      width: 100%;
+      border-radius: 4px;
+      display: block;
+    }
+
+    .gif-placeholder {
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-family: var(--mono);
+      background: var(--bg3);
+      border-radius: 4px;
+    }
+
+    /* WA BUTTON */
+    .wa-section {
+      padding: 12px 16px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .wa-section-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .wa-btn {
+      width: 100%;
+      padding: 9px;
+      border-radius: 6px;
+      border: 1px solid rgba(37, 211, 102, 0.3);
+      background: rgba(37, 211, 102, 0.08);
+      color: #25d366;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .wa-btn:hover {
+      background: rgba(37, 211, 102, 0.15);
+      border-color: rgba(37, 211, 102, 0.5);
+    }
+
+    .wa-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .wa-status {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 6px;
+      font-family: var(--mono);
+      min-height: 16px;
+    }
+
+    /* ZONES PANEL */
+    .zones-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .zone-item {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+
+    .zone-name {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+      font-family: var(--mono);
+    }
+
+    .zone-count {
+      font-size: 20px;
+      font-weight: 700;
+      font-family: var(--mono);
+    }
+
+    .zone-bar {
+      height: 2px;
+      background: var(--border);
+      border-radius: 1px;
+      margin-top: 6px;
+    }
+
+    .zone-fill {
+      height: 100%;
+      border-radius: 1px;
+      transition: width 0.8s ease;
+    }
+
+    /* FILTER BAR */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    select {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: var(--mono);
+      cursor: pointer;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--blue);
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      z-index: 9999;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.25s;
+      max-width: 320px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.success {
+      border-color: rgba(63, 185, 80, 0.5);
+    }
+
+    .toast.error {
+      border-color: rgba(248, 81, 73, 0.5);
+    }
+
+    /* MODAL */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal-bg.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      width: 560px;
+      max-width: 95vw;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      font-family: var(--serif);
+      color: var(--green2);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-close {
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+
+    .modal-close:hover {
+      color: var(--text);
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .modal-field {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+
+    .modal-field-label {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+      letter-spacing: 1px;
+      margin-bottom: 3px;
+    }
+
+    .modal-field-value {
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--mono);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 1100px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .kpi-row {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .kpi-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .container {
+        padding: 12px;
+      }
+    }
+
+    /* SEPARATOR */
+    .gap {
+      margin-bottom: 16px;
+    }
+
+    /* CONN STATUS */
+    .conn-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      transition: background 0.3s;
+    }
+
+    .conn-dot.connected {
+      background: var(--green);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">🌿</div>
+      <span>Historique des Corps détectés</span>
+
+    </div>
+    <div class="header-right">
+      <div class="live-badge">
+        <div class="live-dot" id="conn-dot"></div>
+        <span id="conn-label">Connexion...</span>
+      </div>
+      <span class="clock" id="clock">--:--:--</span>
+      <a href="/test" class="btn-header">Test Image</a>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">Total</div>
+        <div class="kpi-value" id="kpi-total" style="color:var(--text)">—</div>
+        <div class="kpi-sub">inspections</div>
+        <div class="kpi-bar">
+          <div class="kpi-bar-fill" id="bar-total" style="background:var(--muted);width:100%"></div>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Rejetés</div>
+        <div class="kpi-value" id="kpi-reject" style="color:var(--red)">—</div>
+        <div class="kpi-sub">corps étrangers</div>
+        <div class="kpi-bar">
+          <div class="kpi-bar-fill" id="bar-reject" style="background:var(--red);width:0%"></div>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Révision</div>
+        <div class="kpi-value" id="kpi-review" style="color:var(--orange)">—</div>
+        <div class="kpi-sub">opérateur requis</div>
+        <div class="kpi-bar">
+          <div class="kpi-bar-fill" id="bar-review" style="background:var(--orange);width:0%"></div>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Acceptés</div>
+        <div class="kpi-value" id="kpi-accept" style="color:var(--green)">—</div>
+        <div class="kpi-sub">conformes</div>
+        <div class="kpi-bar">
+          <div class="kpi-bar-fill" id="bar-accept" style="background:var(--green);width:0%"></div>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Détection</div>
+        <div class="kpi-value" id="kpi-rate" style="color:var(--orange)">—%</div>
+        <div class="kpi-sub">anomalies / total</div>
+        <div class="kpi-bar">
+          <div class="kpi-bar-fill" id="bar-rate" style="background:var(--orange);width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="main-grid">
+
+      <!-- LEFT: incidents + zones -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+
+        <!-- Incidents Table -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Historique des Incidents</div>
+            <div class="filter-bar">
+              <select id="filter-verdict" onchange="renderTable()">
+                <option value="ALL">Tous</option>
+                <option value="REJECT">Reject</option>
+                <option value="HUMAN_REVIEW">Révision</option>
+                <option value="ACCEPT">Accept</option>
+              </select>
+              <button class="btn" onclick="exportCSV()">Export CSV</button>
+            </div>
+          </div>
+          <div class="panel-body" style="padding:0 20px;">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>HEURE</th>
+                    <th>STATION</th>
+                    <th>OBJET</th>
+                    <th>MATIERE</th>
+                    <th>SCORE</th>
+                    <th>VERDICT</th>
+                    <th>DETAIL</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zones critiques -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Zones Critiques</div>
+          </div>
+          <div class="panel-body">
+            <div class="zones-grid" id="zones-grid">
+              <div style="color:var(--muted);font-size:12px;font-family:var(--mono);grid-column:1/-1">
+                Aucune donnée disponible
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="right-col">
+
+        <!-- Dernière alerte -->
+        <div class="alert-card">
+          <div class="alert-header">Dernière Detection</div>
+          <div class="alert-body" id="alert-body">
+            <div style="color:var(--muted);font-size:12px;font-family:var(--mono)">
+              En attente d'inspection...
+            </div>
+          </div>
+        </div>
+
+        <!-- GIF section removed as requested -->
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
+    <div class="modal">
+      <div class="modal-title">
+        <span id="modal-title-text">Rapport</span>
+        <span class="modal-close" onclick="closeModalDirect()">×</span>
+      </div>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const socket = io();
+    let incidents = [];
+    let selectedInc = null;
+
+    // ── SOCKET ────────────────────────────────────────────────────────────────────
+    socket.on("connect", () => {
+      document.getElementById("conn-dot").style.background = "var(--green)";
+      document.getElementById("conn-label").textContent = "En direct";
+    });
+
+    socket.on("disconnect", () => {
+      document.getElementById("conn-dot").style.background = "var(--red)";
+      document.getElementById("conn-label").textContent = "Déconnecté";
+    });
+
+    socket.on("update", data => {
+      if (data.alerts) incidents = data.alerts;
+      if (data.stats) updateKPIs(data.stats);
+      renderTable();
+      renderZones();
+      if (data.latest && data.latest.decision) selectIncident(data.latest);
+    });
+
+    socket.on("inspection_done", data => {
+      toast("Inspection terminée: " + (data.result?.decision || "?"), "success");
+      fetch("/api/alerts").then(r => r.json()).then(data => {
+        incidents = data;
+        renderTable();
+        renderZones();
+        if (data.length) selectIncident(data[0]);
+      });
+      fetch("/api/stats").then(r => r.json()).then(updateKPIs);
+    });
+
+    socket.on("inspection_error", data => {
+      toast("Erreur: " + data.error, "error");
+    });
+
+    // ── KPIs ──────────────────────────────────────────────────────────────────────
+    function updateKPIs(stats) {
+      const { total, reject, review, accept, rate } = stats;
+      document.getElementById("kpi-total").textContent = total;
+      document.getElementById("kpi-reject").textContent = reject;
+      document.getElementById("kpi-review").textContent = review;
+      document.getElementById("kpi-accept").textContent = accept;
+      document.getElementById("kpi-rate").textContent = rate + "%";
+      if (total > 0) {
+        document.getElementById("bar-reject").style.width = (reject / total * 100) + "%";
+        document.getElementById("bar-review").style.width = (review / total * 100) + "%";
+        document.getElementById("bar-accept").style.width = (accept / total * 100) + "%";
+        document.getElementById("bar-rate").style.width = Math.min(rate, 100) + "%";
+      }
+    }
+
+    // ── TABLE ─────────────────────────────────────────────────────────────────────
+    function renderTable() {
+      const filter = document.getElementById("filter-verdict").value;
+      const rows = filter === "ALL" ? incidents : incidents.filter(i => i.decision === filter);
+      const tbody = document.getElementById("tbody");
+      tbody.innerHTML = "";
+
+      rows.slice(0, 50).forEach((inc, idx) => {
+        const score = typeof inc.anomaly_score === "number" ? inc.anomaly_score : null;
+        const scoreEl = score !== null
+          ? `<span class="${score > 0.4 ? "score-high" : score > 0.2 ? "score-med" : "score-low"}">${score.toFixed(3)}</span>`
+          : `<span style="color:var(--muted)">—</span>`;
+
+        const verdict = inc.decision || "?";
+        const badge = `<span class="badge badge-${verdict.toLowerCase() === "human_review" ? "review" : verdict.toLowerCase()}">${verdict}</span>`;
+
+        const ts = inc.timestamp
+          ? new Date(inc.timestamp).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })
+          : "—";
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+      <td class="ts">${ts}</td>
+      <td style="font-family:var(--mono);font-size:12px">${inc.station || "—"}</td>
+      <td style="font-size:12px">${inc.object || "—"}</td>
+      <td style="font-size:12px;color:var(--muted)">${inc.material || "—"}</td>
+      <td>${scoreEl}</td>
+      <td>${badge}</td>
+      <td><button class="btn" style="padding:3px 8px;font-size:11px" onclick="showDetail(event,${idx})">Voir</button></td>
+    `;
+        tr.addEventListener("click", () => selectIncident(inc));
+        tbody.appendChild(tr);
+      });
+
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--muted);padding:20px;text-align:center;font-family:var(--mono)">Aucun résultat</td></tr>`;
+      }
+    }
+
+    // ── ZONES ─────────────────────────────────────────────────────────────────────
+    function renderZones() {
+      const grid = document.getElementById("zones-grid");
+      const counts = {};
+      incidents.forEach(inc => {
+        if (inc.decision !== "ACCEPT") {
+          counts[inc.station] = (counts[inc.station] || 0) + 1;
+        }
+      });
+
+      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+      const max = sorted[0]?.[1] || 1;
+      const colors = ["var(--red)", "var(--orange)", "#d29922", "var(--green)", "var(--blue)", "var(--muted)"];
+
+      if (!sorted.length) {
+        grid.innerHTML = `<div style="color:var(--muted);font-size:12px;font-family:var(--mono);grid-column:1/-1">Aucune anomalie</div>`;
+        return;
+      }
+
+      grid.innerHTML = "";
+      sorted.forEach(([station, count], i) => {
+        const pct = Math.round(count / max * 100);
+        const div = document.createElement("div");
+        div.className = "zone-item";
+        div.innerHTML = `
+      <div class="zone-name">${station}</div>
+      <div class="zone-count" style="color:${colors[i]}">${count}</div>
+      <div class="zone-bar"><div class="zone-fill" style="width:${pct}%;background:${colors[i]}"></div></div>
+    `;
+        grid.appendChild(div);
+      });
+    }
+
+    // ── SELECT INCIDENT ───────────────────────────────────────────────────────────
+    function selectIncident(inc) {
+      selectedInc = inc;
+      const verdict = inc.decision || "?";
+      const color = verdict === "REJECT" ? "var(--red)" : verdict === "HUMAN_REVIEW" ? "var(--orange)" : "var(--green)";
+      const icon = verdict === "REJECT" ? "🚨" : verdict === "HUMAN_REVIEW" ? "⚠️" : "✅";
+      const score = typeof inc.anomaly_score === "number" ? inc.anomaly_score.toFixed(3) : "—";
+      const ts = inc.timestamp ? new Date(inc.timestamp).toLocaleTimeString("fr-FR") : "—";
+
+      document.getElementById("alert-body").innerHTML = `
+    <div class="alert-verdict" style="color:${color}">${icon} ${verdict}</div>
+    <div class="alert-row"><span class="alert-key">OBJET</span><span class="alert-val">${inc.object || "—"}</span></div>
+    <div class="alert-row"><span class="alert-key">MATIERE</span><span class="alert-val">${inc.material || "—"}</span></div>
+    <div class="alert-row"><span class="alert-key">DANGER</span><span class="alert-val">${inc.hazard || "—"}</span></div>
+    <div class="alert-row"><span class="alert-key">STATION</span><span class="alert-val">${inc.station || "—"}</span></div>
+    <div class="alert-row"><span class="alert-key">SCORE</span><span class="alert-val" style="color:${color}">${score}</span></div>
+    <div class="alert-row"><span class="alert-key">HEURE</span><span class="alert-val">${ts}</span></div>
+  `;
+
+      // GIF section removed
+    }
+
+    // ── DETAIL MODAL ──────────────────────────────────────────────────────────────
+    function showDetail(event, idx) {
+      event.stopPropagation();
+      const filter = document.getElementById("filter-verdict").value;
+      const rows = filter === "ALL" ? incidents : incidents.filter(i => i.decision === filter);
+      const inc = rows[idx];
+      if (!inc) return;
+
+      const verdict = inc.decision || "?";
+      const color = verdict === "REJECT" ? "var(--red)" : verdict === "HUMAN_REVIEW" ? "var(--orange)" : "var(--green)";
+      const score = typeof inc.anomaly_score === "number" ? inc.anomaly_score.toFixed(4) : "—";
+      const ts = inc.timestamp ? new Date(inc.timestamp).toLocaleString("fr-FR") : "—";
+
+      document.getElementById("modal-title-text").innerHTML = `
+    <span class="badge badge-${verdict.toLowerCase() === "human_review" ? "review" : verdict.toLowerCase()}">${verdict}</span>
+    &nbsp; ${inc.station || ""}
+  `;
+
+      document.getElementById("modal-content").innerHTML = `
+    <div class="modal-grid">
+      ${mf("Timestamp", ts)}
+      ${mf("Station", inc.station || "—")}
+      ${mf("Objet", inc.object || "—")}
+      ${mf("Matière", inc.material || "—")}
+      ${mf("Danger", inc.hazard || "—")}
+      ${mf("Score", score)}
+      ${mf("Cause", inc.root_cause || "—")}
+      ${mf("Bbox", inc.detected_bbox ? `[${inc.detected_bbox.join(", ")}]` : "—")}
+    </div>
+    ${inc.gif_path ? `
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:12px;">
+        GIF: ${inc.gif_path}
+      </div>
+    ` : ""}
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn btn-green" onclick="exportInc('${idx}')">Export JSON</button>
+    </div>
+  `;
+
+      document.getElementById("modal-bg").classList.add("open");
+    }
+
+    function mf(label, val) {
+      return `<div class="modal-field">
+    <div class="modal-field-label">${label}</div>
+    <div class="modal-field-value">${val}</div>
+  </div>`;
+    }
+
+    function closeModal(e) { if (e.target === document.getElementById("modal-bg")) closeModalDirect(); }
+    function closeModalDirect() { document.getElementById("modal-bg").classList.remove("open"); }
+
+    // ── EXPORT ────────────────────────────────────────────────────────────────────
+    function exportCSV() {
+      const headers = ["timestamp", "station", "object", "material", "hazard", "anomaly_score", "decision", "root_cause"];
+      const rows = incidents.map(i => headers.map(h => JSON.stringify(i[h] ?? "")).join(","));
+      const csv = [headers.join(","), ...rows].join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = "elmazraa_alerts.csv"; a.click();
+    }
+
+    function exportInc(idx) {
+      const filter = document.getElementById("filter-verdict").value;
+      const rows = filter === "ALL" ? incidents : incidents.filter(i => i.decision === filter);
+      const inc = rows[idx];
+      const blob = new Blob([JSON.stringify(inc, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = `report_${Date.now()}.json`; a.click();
+    }
+
+    // ── TOAST ─────────────────────────────────────────────────────────────────────
+    function toast(msg, type = "success") {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.className = `toast ${type} show`;
+      setTimeout(() => { el.className = `toast ${type}`; }, 3500);
+    }
+
+    // ── CLOCK ─────────────────────────────────────────────────────────────────────
+    setInterval(() => {
+      document.getElementById("clock").textContent = new Date().toLocaleTimeString("fr-FR");
+    }, 1000);
+
+    // ── INIT ──────────────────────────────────────────────────────────────────────
+    fetch("/api/alerts").then(r => r.json()).then(data => {
+      incidents = data;
+      renderTable();
+      renderZones();
+      if (data.length) selectIncident(data[0]);
+    });
+
+    fetch("/api/stats").then(r => r.json()).then(updateKPIs);
+  </script>
+</body>
+
+</html>

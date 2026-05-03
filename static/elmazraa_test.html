@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <title>ELMAZRAA — Test</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f2f6f3;
+      --bg2: #ffffff;
+      --bg3: #f8faf8;
+      --border: #e2e8e2;
+      --green: #16a34a;
+      --green2: #115e3b;
+      --red: #ef4444;
+      --orange: #f97316;
+      --blue: #3b82f6;
+      --text: #111827;
+      --muted: #6b7280;
+      --mono: 'Courier New', monospace;
+      --serif: 'Lora', 'Georgia', 'Times New Roman', serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 20px;
+      font-family: var(--serif);
+      color: var(--green2);
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--green2);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+
+    .page-title {
+      font-size: 26px;
+      font-weight: 700;
+      font-family: var(--serif);
+      color: var(--green2);
+      margin-bottom: 6px;
+    }
+
+    .page-sub {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--green2);
+      font-family: var(--serif);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-body {
+      padding: 20px;
+    }
+
+    /* UPLOAD ZONE */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: var(--blue);
+      background: rgba(88, 166, 255, 0.04);
+    }
+
+    .upload-zone input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .upload-text {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .upload-text strong {
+      color: var(--blue);
+    }
+
+    /* PREVIEW */
+    .preview-wrap {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .preview-wrap img {
+      width: 100%;
+      display: block;
+      max-height: 200px;
+      object-fit: cover;
+    }
+
+    /* STATION INPUT */
+    .form-group {
+      margin-top: 14px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--mono);
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: var(--mono);
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--blue);
+    }
+
+    select.form-input {
+      cursor: pointer;
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    .btn:hover {
+      border-color: var(--blue);
+      background: rgba(88, 166, 255, 0.06);
+    }
+
+    .btn-primary {
+      background: var(--green2);
+      border-color: var(--green2);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2ea043;
+      border-color: #2ea043;
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-wa {
+      background: rgba(37, 211, 102, 0.08);
+      border-color: rgba(37, 211, 102, 0.3);
+      color: #25d366;
+      font-weight: 600;
+    }
+
+    .btn-wa:hover {
+      background: rgba(37, 211, 102, 0.15);
+      border-color: rgba(37, 211, 102, 0.5);
+    }
+
+    /* STATUS LOG */
+    .log-box {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      height: 200px;
+      overflow-y: auto;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .log-entry {
+      display: block;
+      padding: 1px 0;
+    }
+
+    .log-entry.info {
+      color: var(--muted);
+    }
+
+    .log-entry.ok {
+      color: var(--green);
+    }
+
+    .log-entry.error {
+      color: var(--red);
+    }
+
+    .log-entry.warn {
+      color: var(--orange);
+    }
+
+    /* RESULT CARD */
+    .result-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .result-verdict {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: var(--mono);
+      margin-bottom: 10px;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      font-size: 12px;
+    }
+
+    .result-row:last-child {
+      border-bottom: none;
+    }
+
+    .result-key {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    .result-val {
+      font-weight: 500;
+      font-family: var(--mono);
+    }
+
+    /* WA PREVIEW */
+    .wa-preview {
+      background: #0a1a0e;
+      border: 1px solid rgba(37, 211, 102, 0.2);
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 12px;
+      line-height: 1.8;
+      font-family: var(--mono);
+      margin-top: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #c9d1d9;
+      min-height: 80px;
+    }
+
+    /* PROGRESS */
+    .progress-wrap {
+      margin-top: 12px;
+      display: none;
+    }
+
+    .progress-bar {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.3s;
+      animation: indeterminate 1.5s ease-in-out infinite;
+    }
+
+    @keyframes indeterminate {
+      0% {
+        transform: translateX(-100%);
+        width: 50%;
+      }
+
+      100% {
+        transform: translateX(200%);
+        width: 50%;
+      }
+    }
+
+    .progress-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+      margin-top: 6px;
+      text-align: center;
+    }
+
+    .btn-header {
+      background: var(--bg2);
+      color: var(--green2);
+      border: 1px solid var(--green2);
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-header:hover {
+      background: rgba(17, 94, 59, 0.05);
+    }
+
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">🌿</div>
+      <span>TEST</span>
+
+    </div>
+    <a href="/" class="btn-header">← Dashboard</a>
+  </header>
+
+  <div class="container">
+    <div class="page-title">Page de Test</div>
+    <div class="page-sub">Envoyez une image pour lancer une inspection.</div>
+
+    <div class="grid">
+
+      <!-- LEFT COLUMN (INSPECTION PANEL) -->
+      <div class="panel">
+        <div class="panel-header">Inspection Image</div>
+        <div class="panel-body">
+
+          <div class="upload-zone" id="upload-zone">
+            <input type="file" id="file-input" accept="image/*" onchange="onFileSelect(event)" />
+            <div class="upload-icon">📷</div>
+            <div class="upload-text">
+              <strong>Cliquez ou glissez</strong> une image<br>
+              JPG, PNG, JPEG — max 10 MB
+            </div>
+          </div>
+
+          <div class="preview-wrap" id="preview-wrap">
+            <img id="preview-img" src="" alt="Preview" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">STATION</label>
+            <select id="station-select" class="form-input">
+              <option value="Station-1">Station-1</option>
+              <option value="Station-2">Station-2</option>
+              <option value="Station-3">Station-3</option>
+              <option value="Station-4">Station-4</option>
+              <option value="Conveyor-A">Conveyor-A</option>
+              <option value="Conveyor-B">Conveyor-B</option>
+              <option value="Station-Test">Station-Test</option>
+            </select>
+          </div>
+
+          <button class="btn btn-primary" id="inspect-btn" onclick="startInspection()" disabled>
+            Lancer l'Inspection
+          </button>
+
+          <div class="progress-wrap" id="progress-wrap">
+            <div class="progress-bar">
+              <div class="progress-fill"></div>
+            </div>
+            <div class="progress-label" id="progress-label">Inspection en cours...</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN (RESULT) -->
+      <div class="panel">
+        <div class="panel-header">Résultat de l'Inspection</div>
+        <div class="panel-body" style="height: 100%;">
+          <div class="result-card" id="result-card" style="display: block; border: none; padding: 0; background: transparent; margin-top: 0;">
+            <div class="result-verdict" id="result-verdict" style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: var(--muted);">Prêt pour l'analyse...</div>
+            <div id="result-rows" style="margin-bottom: 16px;"></div>
+            <div id="result-gif-wrap" style="margin-top: 16px; display: none; text-align: center;">
+              <img id="result-gif" src="" style="max-width: 100%; border-radius: 6px; border: 1px solid var(--border);" />
+            </div>
+            <div id="result-accept-msg" style="margin-top: 16px; display: none; text-align: center; color: var(--green); font-weight: bold; padding: 12px; background: rgba(22, 163, 74, 0.1); border-radius: 6px; border: 1px solid rgba(22, 163, 74, 0.2);">
+              ✅ Viande de poulet saine, sans corps étranger !
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const socket = io();
+    let selectedFile = null;
+
+    // ── SOCKET EVENTS ─────────────────────────────────────────────────────────────
+    socket.on("connect", () => addLog("main-log", "WebSocket connecté", "ok"));
+    socket.on("disconnect", () => addLog("main-log", "WebSocket déconnecté", "error"));
+
+    socket.on("update", data => {
+      addLog("main-log", `Mise à jour: ${data.alerts?.length || 0} incidents`, "info");
+    });
+
+    socket.on("inspection_done", data => {
+      const r = data.result || {};
+      addLog("main-log", `Inspection terminée: ${r.decision || "?"}`, r.decision === "REJECT" ? "error" : "ok");
+      showResult(r);
+      document.getElementById("progress-wrap").style.display = "none";
+      document.getElementById("inspect-btn").disabled = !selectedFile;
+    });
+
+    socket.on("inspection_error", data => {
+      addLog("main-log", `Erreur inspection: ${data.error}`, "error");
+      document.getElementById("progress-wrap").style.display = "none";
+      document.getElementById("inspect-btn").disabled = !selectedFile;
+    });
+
+    // ── FILE SELECT ───────────────────────────────────────────────────────────────
+    function onFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      selectedFile = file;
+      addLog("main-log", `Image sélectionnée: ${file.name} (${(file.size / 1024).toFixed(0)} KB)`, "info");
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = document.getElementById("preview-img");
+        const wrap = document.getElementById("preview-wrap");
+        img.src = e.target.result;
+        wrap.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+
+      document.getElementById("inspect-btn").disabled = false;
+    }
+
+    // Drag & drop
+    const zone = document.getElementById("upload-zone");
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        document.getElementById("file-input").files = dt.files;
+        onFileSelect({ target: { files: [file] } });
+      }
+    });
+
+    // ── INSPECTION ────────────────────────────────────────────────────────────────
+    async function startInspection() {
+      if (!selectedFile) return;
+
+      const btn = document.getElementById("inspect-btn");
+      const progress = document.getElementById("progress-wrap");
+      const result = document.getElementById("result-card");
+      const station = document.getElementById("station-select").value;
+
+      btn.disabled = true;
+      progress.style.display = "block";
+      result.style.display = "none";
+
+      addLog("main-log", `Envoi image à ${station}...`, "info");
+
+      const formData = new FormData();
+      formData.append("image", selectedFile);
+      formData.append("station", station);
+
+      try {
+        const r = await fetch("/api/inspect", { method: "POST", body: formData });
+        const d = await r.json();
+        if (d.status === "running") {
+          addLog("main-log", "Inspection démarrée — attente résultat...", "ok");
+          document.getElementById("progress-label").textContent = "Analyse en cours (peut prendre 10–30s)...";
+        } else {
+          addLog("main-log", "Erreur: " + JSON.stringify(d), "error");
+          btn.disabled = false;
+          progress.style.display = "none";
+        }
+      } catch (e) {
+        addLog("main-log", "Erreur réseau: " + e.message, "error");
+        btn.disabled = false;
+        progress.style.display = "none";
+      }
+    }
+
+    function showResult(r) {
+      const card = document.getElementById("result-card");
+      const verdict = r.decision || "?";
+      const color = verdict === "REJECT" ? "var(--red)" : verdict === "HUMAN_REVIEW" ? "var(--orange)" : "var(--green)";
+      const icon = verdict === "REJECT" ? "🚨" : verdict === "HUMAN_REVIEW" ? "⚠️" : "✅";
+      const score = typeof r.anomaly_score === "number" ? r.anomaly_score.toFixed(4) : "—";
+
+      document.getElementById("result-verdict").innerHTML = `<span style="color:${color}">${icon} ${verdict}</span>`;
+
+      document.getElementById("result-rows").innerHTML = `
+    ${rr("Objet", r.object_detected || "—")}
+    ${rr("Matière", r.dominant_material || "—")}
+    ${rr("Score", score)}
+    ${rr("Station", r.station || "—")}
+    ${rr("Durée", r.duration_seconds ? r.duration_seconds + "s" : "—")}
+  `;
+
+      const gifWrap = document.getElementById("result-gif-wrap");
+      const gifImg = document.getElementById("result-gif");
+      const acceptMsg = document.getElementById("result-accept-msg");
+
+      if (verdict === "REJECT" || verdict === "HUMAN_REVIEW") {
+        acceptMsg.style.display = "none";
+        const gifPath = (r.alert && r.alert.gif_path) || r.gif_path;
+        if (gifPath) {
+          const fname = gifPath.replace(/\\/g, "/").split("/").pop();
+          gifImg.src = `/outputs/${fname}`;
+          gifWrap.style.display = "block";
+        } else {
+          gifWrap.style.display = "none";
+        }
+      } else if (verdict === "ACCEPT") {
+        gifWrap.style.display = "none";
+        acceptMsg.style.display = "block";
+      } else {
+        gifWrap.style.display = "none";
+        acceptMsg.style.display = "none";
+      }
+
+      card.style.display = "block";
+    }
+
+    function rr(k, v) {
+      return `<div class="result-row"><span class="result-key">${k}</span><span class="result-val">${v}</span></div>`;
+    }
+
+
+    // ── LOG HELPER ────────────────────────────────────────────────────────────────
+    function addLog(id, msg, type = "info") {
+      const box = document.getElementById(id);
+      if (!box) return;
+      const span = document.createElement("span");
+      const ts = new Date().toLocaleTimeString("fr-FR");
+      span.className = `log-entry ${type}`;
+      span.textContent = `[${ts}] ${msg}`;
+      span.style.display = "block";
+      box.appendChild(span);
+      box.scrollTop = box.scrollHeight;
+
+      // Keep max 200 lines
+      while (box.children.length > 200) {
+        box.removeChild(box.firstChild);
+      }
+    }
+  </script>
+</body>
+
+</html>
