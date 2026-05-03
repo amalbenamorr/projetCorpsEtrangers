@@ -19,5 +19,5 @@ python-socketio
 python-engineio
 opencv-python-headless
 
-torch==2.2.2
-torchvision==0.17.2
+torch==2.5.1
+torchvision==0.20.1
