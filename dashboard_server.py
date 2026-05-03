@@ -147,7 +147,10 @@ def api_inspect():
                 "timestamp": datetime.now().isoformat()
             })
         except Exception as e:
-            socketio.emit("inspection_error", {"error": str(e)})
+            import traceback
+            err = traceback.format_exc()
+            print(f"[INSPECTION ERROR] {err}")
+            socketio.emit("inspection_error", {"error": str(e), "detail": err})
         finally:
             try:
                 tmp_path.unlink()
