@@ -20,4 +20,4 @@ python-engineio
 opencv-python-headless
 
 torch==2.5.1
-torchvision==0.20.1
+torchvision==0.21.0
