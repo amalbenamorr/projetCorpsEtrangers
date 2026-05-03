@@ -92,12 +92,12 @@ def watch_log():
 
 
 # ── ROUTES ────────────────────────────────────────────────────────────────────
-@app.route("/")
+@app.route("/dashboard")
 def dashboard():
     return send_from_directory("static", "elmazraa_dashboard.html")
 
 
-@app.route("/test")
+@app.route("/")
 def test_page():
     return send_from_directory("static", "elmazraa_test.html")
 
